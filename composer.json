@@ -1,0 +1,62 @@
+{
+    "name": "xylo/multiselect-two",
+    "description": "A Filament two-sided multiselect field with search, barcode scan, descriptions, and a natural accent theme. Compatible with Filament 4 and 5.",
+    "keywords": [
+        "xylo",
+        "laravel",
+        "filament",
+        "multiselect",
+        "two-sides",
+        "transfer-list",
+        "barcode"
+    ],
+    "homepage": "https://github.com/xylo/multiselect-two",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Qusai Homadi",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.2|^8.3|^8.4",
+        "filament/filament": "^4.0 || ^5.0",
+        "filament/forms": "^4.0 || ^5.0",
+        "spatie/laravel-package-tools": "^1.16"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.0",
+        "orchestra/testbench": "^9.0 || ^10.0",
+        "pestphp/pest": "^3.0 || ^4.0",
+        "pestphp/pest-plugin-laravel": "^3.0 || ^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Xylo\\MultiselectTwo\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Xylo\\MultiselectTwo\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest",
+        "format": "vendor/bin/pint"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Xylo\\MultiselectTwo\\XyloMultiselectTwoServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

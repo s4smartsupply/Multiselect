@@ -1,0 +1,480 @@
+/**
+ * Theme-aware styles for Xylo Multiselect Two.
+ * Structural colors follow Filament tokens (--gray-*, --primary-*, etc.).
+ * Light/dark adapts via .dark / html.dark.
+ */
+
+.xms-two {
+    /* Structural — Filament gray palette with safe fallbacks */
+    --xms-border: var(--gray-200, #e5e7eb);
+    --xms-border-strong: var(--gray-300, #d1d5db);
+    --xms-surface: #ffffff;
+    --xms-muted: var(--gray-500, #6b7280);
+    --xms-text: var(--gray-950, #111827);
+    --xms-footer: var(--xms-surface);
+    --xms-input-bg: #ffffff;
+    --xms-input-disabled: var(--gray-50, #f9fafb);
+    --xms-badge-bg: var(--gray-100, #f3f4f6);
+    --xms-badge-text: var(--gray-600, #4b5563);
+    --xms-placeholder: var(--gray-400, #9ca3af);
+    --xms-icon: var(--gray-400, #9ca3af);
+    --xms-btn-text: var(--gray-700, #374151);
+    --xms-add-bg-default: var(--gray-100, #eceff3);
+    --xms-remove-danger: var(--danger-600, #dc2626);
+    --xms-remove-danger-soft: color-mix(in srgb, var(--danger-500, #ef4444) 12%, white);
+
+    /* Accent default (natural) */
+    --xms-accent: #2f9e7a;
+    --xms-accent-soft: #e8f7f1;
+    --xms-accent-soft-strong: #d5f0e5;
+    --xms-accent-border: #67c3a3;
+    --xms-accent-text: #1f7a5c;
+
+    --xms-radius: 0.75rem;
+    --xms-radius-sm: 0.625rem;
+    width: 100%;
+    color: var(--xms-text);
+}
+
+.xms-two[data-accent='natural'],
+.xms-two:not([data-accent]) {
+    --xms-accent: #2f9e7a;
+    --xms-accent-soft: #e8f7f1;
+    --xms-accent-soft-strong: #d5f0e5;
+    --xms-accent-border: #67c3a3;
+    --xms-accent-text: #1f7a5c;
+}
+
+.xms-two[data-accent='primary'] {
+    --xms-accent: var(--primary-600, #4f46e5);
+    --xms-accent-soft: color-mix(in srgb, var(--primary-500, #6366f1) 14%, white);
+    --xms-accent-soft-strong: color-mix(in srgb, var(--primary-500, #6366f1) 22%, white);
+    --xms-accent-border: var(--primary-400, #818cf8);
+    --xms-accent-text: var(--primary-700, #4338ca);
+}
+
+.xms-two[data-accent='success'] {
+    --xms-accent: var(--success-600, #16a34a);
+    --xms-accent-soft: color-mix(in srgb, var(--success-500, #22c55e) 14%, white);
+    --xms-accent-soft-strong: color-mix(in srgb, var(--success-500, #22c55e) 22%, white);
+    --xms-accent-border: var(--success-400, #4ade80);
+    --xms-accent-text: var(--success-700, #15803d);
+}
+
+.xms-two[data-accent='danger'] {
+    --xms-accent: var(--danger-600, #dc2626);
+    --xms-accent-soft: color-mix(in srgb, var(--danger-500, #ef4444) 14%, white);
+    --xms-accent-soft-strong: color-mix(in srgb, var(--danger-500, #ef4444) 22%, white);
+    --xms-accent-border: var(--danger-400, #f87171);
+    --xms-accent-text: var(--danger-700, #b91c1c);
+}
+
+.xms-two[data-accent='warning'] {
+    --xms-accent: var(--warning-600, #d97706);
+    --xms-accent-soft: color-mix(in srgb, var(--warning-500, #f59e0b) 14%, white);
+    --xms-accent-soft-strong: color-mix(in srgb, var(--warning-500, #f59e0b) 22%, white);
+    --xms-accent-border: var(--warning-400, #fbbf24);
+    --xms-accent-text: var(--warning-700, #b45309);
+}
+
+.xms-two[data-accent='info'] {
+    --xms-accent: var(--info-600, #2563eb);
+    --xms-accent-soft: color-mix(in srgb, var(--info-500, #3b82f6) 14%, white);
+    --xms-accent-soft-strong: color-mix(in srgb, var(--info-500, #3b82f6) 22%, white);
+    --xms-accent-border: var(--info-400, #60a5fa);
+    --xms-accent-text: var(--info-700, #1d4ed8);
+}
+
+.xms-two[data-accent='gray'] {
+    --xms-accent: var(--gray-600, #4b5563);
+    --xms-accent-soft: color-mix(in srgb, var(--gray-500, #6b7280) 14%, white);
+    --xms-accent-soft-strong: color-mix(in srgb, var(--gray-500, #6b7280) 22%, white);
+    --xms-accent-border: var(--gray-400, #9ca3af);
+    --xms-accent-text: var(--gray-700, #374151);
+}
+
+.xms-two[data-accent='custom'] {
+    --xms-accent-soft: color-mix(in srgb, var(--xms-accent) 14%, white);
+    --xms-accent-soft-strong: color-mix(in srgb, var(--xms-accent) 24%, white);
+    --xms-accent-border: color-mix(in srgb, var(--xms-accent) 65%, white);
+    --xms-accent-text: color-mix(in srgb, var(--xms-accent) 82%, black);
+}
+
+/* Dark mode — follows Filament .dark class + panel tokens */
+.dark .xms-two,
+html.dark .xms-two {
+    --xms-border: var(--gray-700, #374151);
+    --xms-border-strong: var(--gray-600, #4b5563);
+    --xms-surface: var(--gray-900, #1f2937);
+    --xms-muted: var(--gray-400, #9ca3af);
+    --xms-text: var(--gray-50, #f9fafb);
+    --xms-footer: var(--xms-surface);
+    --xms-input-bg: var(--gray-950, #111827);
+    --xms-input-disabled: var(--gray-800, #1f2937);
+    --xms-badge-bg: var(--gray-800, #1f2937);
+    --xms-badge-text: var(--gray-300, #d1d5db);
+    --xms-placeholder: var(--gray-500, #6b7280);
+    --xms-icon: var(--gray-500, #6b7280);
+    --xms-btn-text: var(--gray-200, #e5e7eb);
+    --xms-add-bg-default: var(--gray-800, #1f2937);
+    --xms-remove-danger: var(--danger-400, #f87171);
+    --xms-remove-danger-soft: color-mix(in srgb, var(--danger-500, #ef4444) 20%, var(--gray-900, #1f2937));
+
+    --xms-accent-soft: color-mix(in srgb, var(--xms-accent) 22%, var(--gray-900, #1f2937));
+    --xms-accent-soft-strong: color-mix(in srgb, var(--xms-accent) 32%, var(--gray-900, #1f2937));
+    --xms-accent-text: color-mix(in srgb, var(--xms-accent) 55%, white);
+    --xms-accent-border: color-mix(in srgb, var(--xms-accent) 55%, white);
+}
+
+.dark .xms-two[data-accent='primary'],
+html.dark .xms-two[data-accent='primary'] {
+    --xms-accent: var(--primary-400, #818cf8);
+    --xms-accent-soft: color-mix(in srgb, var(--primary-500, #6366f1) 22%, var(--gray-900, #1f2937));
+    --xms-accent-soft-strong: color-mix(in srgb, var(--primary-500, #6366f1) 32%, var(--gray-900, #1f2937));
+    --xms-accent-border: var(--primary-400, #818cf8);
+    --xms-accent-text: var(--primary-300, #a5b4fc);
+}
+
+.dark .xms-two[data-accent='success'],
+html.dark .xms-two[data-accent='success'] {
+    --xms-accent: var(--success-400, #4ade80);
+    --xms-accent-soft: color-mix(in srgb, var(--success-500, #22c55e) 22%, var(--gray-900, #1f2937));
+    --xms-accent-soft-strong: color-mix(in srgb, var(--success-500, #22c55e) 32%, var(--gray-900, #1f2937));
+    --xms-accent-border: var(--success-400, #4ade80);
+    --xms-accent-text: var(--success-300, #86efac);
+}
+
+.dark .xms-two[data-accent='danger'],
+html.dark .xms-two[data-accent='danger'] {
+    --xms-accent: var(--danger-400, #f87171);
+    --xms-accent-soft: color-mix(in srgb, var(--danger-500, #ef4444) 22%, var(--gray-900, #1f2937));
+    --xms-accent-soft-strong: color-mix(in srgb, var(--danger-500, #ef4444) 32%, var(--gray-900, #1f2937));
+    --xms-accent-border: var(--danger-400, #f87171);
+    --xms-accent-text: var(--danger-300, #fca5a5);
+}
+
+.dark .xms-two[data-accent='warning'],
+html.dark .xms-two[data-accent='warning'] {
+    --xms-accent: var(--warning-400, #fbbf24);
+    --xms-accent-soft: color-mix(in srgb, var(--warning-500, #f59e0b) 22%, var(--gray-900, #1f2937));
+    --xms-accent-soft-strong: color-mix(in srgb, var(--warning-500, #f59e0b) 32%, var(--gray-900, #1f2937));
+    --xms-accent-border: var(--warning-400, #fbbf24);
+    --xms-accent-text: var(--warning-300, #fcd34d);
+}
+
+.dark .xms-two[data-accent='info'],
+html.dark .xms-two[data-accent='info'] {
+    --xms-accent: var(--info-400, #60a5fa);
+    --xms-accent-soft: color-mix(in srgb, var(--info-500, #3b82f6) 22%, var(--gray-900, #1f2937));
+    --xms-accent-soft-strong: color-mix(in srgb, var(--info-500, #3b82f6) 32%, var(--gray-900, #1f2937));
+    --xms-accent-border: var(--info-400, #60a5fa);
+    --xms-accent-text: var(--info-300, #93c5fd);
+}
+
+.dark .xms-two[data-accent='gray'],
+html.dark .xms-two[data-accent='gray'] {
+    --xms-accent: var(--gray-300, #d1d5db);
+    --xms-accent-soft: color-mix(in srgb, var(--gray-400, #9ca3af) 18%, var(--gray-900, #1f2937));
+    --xms-accent-soft-strong: color-mix(in srgb, var(--gray-400, #9ca3af) 28%, var(--gray-900, #1f2937));
+    --xms-accent-border: var(--gray-500, #6b7280);
+    --xms-accent-text: var(--gray-200, #e5e7eb);
+}
+
+.dark .xms-two[data-accent='custom'],
+html.dark .xms-two[data-accent='custom'] {
+    --xms-accent-soft: color-mix(in srgb, var(--xms-accent) 22%, var(--gray-900, #1f2937));
+    --xms-accent-soft-strong: color-mix(in srgb, var(--xms-accent) 32%, var(--gray-900, #1f2937));
+    --xms-accent-border: color-mix(in srgb, var(--xms-accent) 55%, white);
+    --xms-accent-text: color-mix(in srgb, var(--xms-accent) 55%, white);
+}
+
+.xms-two__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .xms-two__grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.xms-two__panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    background: var(--xms-surface);
+    border: 1px solid var(--xms-border);
+    border-radius: var(--xms-radius);
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--gray-950, #0f172a) 6%, transparent);
+}
+
+.xms-two__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem 0.35rem;
+}
+
+.xms-two__title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--xms-text);
+}
+
+.xms-two__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0 0.45rem;
+    border-radius: 999px;
+    background: var(--xms-badge-bg);
+    color: var(--xms-badge-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.xms-two__controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem 0.85rem 0.65rem;
+}
+
+.xms-two__input-wrap {
+    position: relative;
+    display: block;
+}
+
+.xms-two__icon {
+    position: absolute;
+    top: 50%;
+    left: 0.75rem;
+    width: 1rem;
+    height: 1rem;
+    transform: translateY(-50%);
+    color: var(--xms-icon);
+    pointer-events: none;
+}
+
+.xms-two__icon svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.xms-two__input {
+    width: 100%;
+    height: 2.4rem;
+    padding: 0.5rem 0.75rem 0.5rem 2.2rem;
+    border: 1px solid var(--xms-border-strong);
+    border-radius: var(--xms-radius-sm);
+    background: var(--xms-input-bg);
+    color: var(--xms-text);
+    font-size: 0.875rem;
+    line-height: 1.25;
+    outline: none;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.xms-two__input::placeholder {
+    color: var(--xms-placeholder);
+}
+
+.xms-two__input:focus {
+    border-color: var(--xms-accent-border);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--xms-accent) 18%, transparent);
+}
+
+.xms-two__input-wrap--barcode .xms-two__input:focus {
+    border-color: var(--xms-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--xms-accent) 22%, transparent);
+}
+
+.xms-two__input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: var(--xms-input-disabled);
+}
+
+.xms-two__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow-y: auto;
+    min-height: var(--xms-list-height, 320px);
+    max-height: var(--xms-list-height, 320px);
+    border-top: 1px solid var(--xms-border);
+    border-bottom: 1px solid var(--xms-border);
+}
+
+.xms-two__item {
+    border-bottom: 1px solid var(--xms-border);
+    transition: background-color 180ms ease;
+}
+
+.xms-two__item:last-child {
+    border-bottom: none;
+}
+
+.xms-two__item-button,
+.xms-two__item-row {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 3.15rem;
+    padding: 0.65rem 0.85rem;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    text-align: left;
+}
+
+.xms-two__item-button {
+    cursor: pointer;
+}
+
+.xms-two__item:hover {
+    background: var(--xms-item-hover, var(--xms-accent-soft));
+}
+
+.xms-two__panel--available .xms-two__item:hover {
+    background: var(--xms-available-hover, var(--xms-item-hover, var(--xms-accent-soft)));
+}
+
+.xms-two__panel--selected .xms-two__item:hover {
+    background: var(--xms-selected-hover, var(--xms-item-hover, var(--xms-accent-soft)));
+}
+
+.xms-two__item-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.xms-two__item-button--grow {
+    flex: 1;
+    min-width: 0;
+    padding-left: 0.15rem;
+    padding-right: 0.15rem;
+}
+
+.xms-two__item-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.xms-two__item-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--xms-text);
+}
+
+.xms-two__item-description {
+    font-size: 0.8rem;
+    line-height: 1.2;
+    color: var(--xms-muted);
+}
+
+.xms-two__item-action,
+.xms-two__icon-button {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    color: var(--xms-icon);
+}
+
+.xms-two__item-action svg,
+.xms-two__icon-button svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.xms-two__icon-button {
+    border: 0;
+    background: transparent;
+    border-radius: 0.4rem;
+    cursor: pointer;
+}
+
+.xms-two__icon-button:hover:not(:disabled) {
+    color: var(--xms-accent-text);
+    background: var(--xms-accent-soft);
+}
+
+.xms-two__icon-button--remove:hover:not(:disabled) {
+    color: var(--xms-remove-danger);
+    background: var(--xms-remove-danger-soft);
+}
+
+.xms-two__icon-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.xms-two__empty {
+    padding: 1.25rem 1rem;
+    color: var(--xms-placeholder);
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+.xms-two__footer {
+    padding: 0.75rem 0.85rem;
+    background: var(--xms-footer);
+}
+
+.xms-two__bulk {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.35rem;
+    padding: 0.5rem 0.75rem;
+    border: 0;
+    border-radius: var(--xms-radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 120ms ease, color 120ms ease, opacity 120ms ease;
+}
+
+.xms-two__bulk--add {
+    background: var(--xms-add-bg, var(--xms-add-bg-default));
+    color: var(--xms-btn-text);
+}
+
+.xms-two__bulk--add:hover:not(:disabled) {
+    background: var(--xms-add-hover, var(--xms-accent-soft-strong));
+    color: var(--xms-add-hover-text, var(--xms-accent-text));
+}
+
+.xms-two__bulk--remove {
+    background: var(--xms-remove-bg, var(--xms-surface));
+    color: var(--xms-btn-text);
+}
+
+.xms-two__bulk--remove:hover:not(:disabled) {
+    background: var(--xms-remove-hover, var(--xms-accent-soft-strong));
+    color: var(--xms-remove-hover-text, var(--xms-accent-text));
+}
+
+.xms-two__bulk:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
