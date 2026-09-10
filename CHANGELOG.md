@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.4
+
+- Add all shown now adds every filtered available item, not only the first `pageSize` rendered rows
+
 ## 1.1.2
 
 - Add `limitTo()` so a field can follow another field's selected values in the browser (e.g. Free Reward ⊆ Products to Buy) without a Livewire re-render

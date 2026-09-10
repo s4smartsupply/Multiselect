@@ -220,7 +220,7 @@
 
                 const next = this.selectedSet()
 
-                this.availableEntries().forEach((item) => {
+                this.filteredAvailable().forEach((item) => {
                     next.add(item.value)
                 })
 

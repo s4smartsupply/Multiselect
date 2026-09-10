@@ -122,7 +122,7 @@ XyloMultiselectTwo::make('items')
 - **Dynamic options remount** via `wire:key` (safe for dependent fields like Free Reward ⊆ Products to Buy)
 - Item title + subtitle (e.g. price)
 - Chevron move actions + remove (X) on selected rows
-- **Add all shown** / **Remove all** (Add all only adds currently visible rows)
+- **Add all shown** / **Remove all** (Add all adds every filtered available item, not only the first rendered page)
 - Soft accent color only on hover (items + bulk buttons)
 - Theme-aware colors: text/borders/surfaces follow Filament gray tokens + light/dark automatically
 - Accent: `natural`, Filament colors (`primary`, `success`, …), or any custom CSS color
