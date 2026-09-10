@@ -127,6 +127,12 @@ it('uses a default page size of 80 and accepts custom values', function () {
         ->and($invalid->getPageSize())->toBe(1);
 });
 
+it('can set a limitTo state path', function () {
+    $field = XyloMultiselectTwo::make('items')->limitTo('qualifying_ids');
+
+    expect($field)->toBeInstanceOf(XyloMultiselectTwo::class);
+});
+
 it('keeps MultiselectTwo as a deprecated alias', function () {
     $field = \Xylo\MultiselectTwo\Forms\Components\MultiselectTwo::make('items');
 

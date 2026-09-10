@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.2
+
+- Add `limitTo()` so a field can follow another field's selected values in the browser (e.g. Free Reward ⊆ Products to Buy) without a Livewire re-render
+
 ## 1.1.1
 
 - Build normalized options once per field render (PHP cache + single Blade `@js` payload)

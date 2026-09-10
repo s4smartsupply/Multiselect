@@ -58,6 +58,8 @@ class XyloMultiselectTwo extends Field
      */
     protected int | Closure $pageSize = 80;
 
+    protected string | Closure | null $limitToStatePath = null;
+
     protected string | Closure $accentColor = 'natural';
 
     protected string | Closure | null $hoverColor = null;
@@ -369,6 +371,35 @@ class XyloMultiselectTwo extends Field
         $size = (int) $this->evaluate($this->pageSize);
 
         return max(1, $size);
+    }
+
+    /**
+     * Show only options whose values are currently selected on another field.
+     * Updates in the browser — no Livewire re-render required.
+     */
+    public function limitTo(string | Closure | null $statePath): static
+    {
+        $this->limitToStatePath = $statePath;
+
+        return $this;
+    }
+
+    public function getLimitToStatePath(): ?string
+    {
+        $path = $this->evaluate($this->limitToStatePath);
+
+        if (! filled($path)) {
+            return null;
+        }
+
+        $path = (string) $path;
+        $containerPath = $this->getContainer()->getStatePath();
+
+        if (filled($containerPath) && $path !== $containerPath && ! str_starts_with($path, $containerPath.'.')) {
+            return $containerPath.'.'.$path;
+        }
+
+        return $path;
     }
 
     /**

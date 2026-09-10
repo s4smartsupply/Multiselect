@@ -146,6 +146,7 @@ XyloMultiselectTwo::make('items')
 | `showBulkActions()`                                                                     | Toggle footer buttons                                                         |
 | `listHeight(320)`                                                                       | Scroll area height in px                                                      |
 | `pageSize(80)`                                                                          | Rows rendered per chunk (scroll loads more); keep low for huge catalogs       |
+| `limitTo('other_field')`                                                                | Client-side: only show options selected on another field (no Livewire wait)   |
 | `accentColor(...)`                                                                      | `natural`, `primary`/`success`/`danger`/`warning`/`info`/`gray`, or CSS color |
 | `hoverColor(...)`                                                                       | Shared hover for items + both buttons                                         |
 | `itemsHoverColor(...)`                                                                  | Shared hover for both panels' rows                                            |

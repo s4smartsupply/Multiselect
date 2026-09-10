@@ -7,6 +7,7 @@
     $themeStyle = $getThemeStyle();
     $normalizedOptions = $getNormalizedOptions();
     $optionKeys = implode(',', array_keys($normalizedOptions));
+    $limitToStatePath = $getLimitToStatePath();
 @endphp
 
 <x-dynamic-component
@@ -29,6 +30,8 @@
             pageSize: @js($pageSize),
             visibleAvailableCount: @js($pageSize),
             visibleSelectedCount: @js($pageSize),
+            limitPath: @js($limitToStatePath),
+            limitState: @js($limitToStatePath) ? $wire.$entangle(@js($limitToStatePath), true) : [],
             _listsKey: '',
             _selectedSet: null,
             _filteredAvailable: [],
@@ -51,6 +54,13 @@
                 this.$watch('selectedSearch', () => {
                     this.visibleSelectedCount = this.pageSize
                 })
+                if (this.limitPath) {
+                    this.$watch('limitState', () => {
+                        this._listsKey = ''
+                        const allowed = new Set((this.limitState || []).map((value) => String(value)))
+                        this.state = (this.state || []).filter((value) => allowed.has(String(value)))
+                    })
+                }
             },
 
             matchesSearch(option, query) {
@@ -61,8 +71,17 @@
                 return option.search.includes(query.trim().toLowerCase())
             },
 
+            allowedSet() {
+                if (! this.limitPath) {
+                    return null
+                }
+
+                return new Set((this.limitState || []).map((value) => String(value)))
+            },
+
             ensureLists() {
-                const key = (this.state || []).join('\0') + '\n' + this.availableSearch + '\n' + this.selectedSearch
+                const limitKey = (this.limitState || []).join('\0')
+                const key = (this.state || []).join('\0') + '\n' + this.availableSearch + '\n' + this.selectedSearch + '\n' + limitKey
 
                 if (this._listsKey === key) {
                     return
@@ -71,6 +90,7 @@
                 this._listsKey = key
                 this._selectedSet = new Set((this.state || []).map((value) => String(value)))
 
+                const allowed = this.allowedSet()
                 const availableQuery = this.availableSearch
                 const selectedQuery = this.selectedSearch
                 const available = []
@@ -78,6 +98,10 @@
                 let availableCount = 0
 
                 for (const item of this.optionList) {
+                    if (allowed && ! allowed.has(item.value)) {
+                        continue
+                    }
+
                     if (this._selectedSet.has(item.value)) {
                         if (this.matchesSearch(item, selectedQuery)) {
                             selected.push(item)
@@ -164,6 +188,12 @@
                 }
 
                 value = String(value)
+                const allowed = this.allowedSet()
+
+                if (allowed && ! allowed.has(value)) {
+                    return
+                }
+
                 const next = [...this.selectedSet()]
 
                 if (next.includes(value)) {
