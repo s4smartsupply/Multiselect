@@ -599,11 +599,24 @@ class XyloMultiselectTwo extends Field
     }
 
     /**
+     * @var array<string, array{label: string, description: string|null, barcode: string|null, sku: string|null, search: string}>|null
+     */
+    protected ?array $normalizedOptionsCache = null;
+
+    /**
      * Normalized options for Alpine: value => [label, description, barcode, sku, search].
      *
      * @return array<string, array{label: string, description: string|null, barcode: string|null, sku: string|null, search: string}>
      */
     public function getNormalizedOptions(): array
+    {
+        return $this->normalizedOptionsCache ??= $this->buildNormalizedOptions();
+    }
+
+    /**
+     * @return array<string, array{label: string, description: string|null, barcode: string|null, sku: string|null, search: string}>
+     */
+    protected function buildNormalizedOptions(): array
     {
         $descriptions = $this->getDescriptions();
         $barcodes = $this->getBarcodes();

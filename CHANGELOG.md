@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1
+
+- Build normalized options once per field render (PHP cache + single Blade `@js` payload)
+- Memoize Alpine available/selected lists in one pass so search, counts, and clicks do not refilter the catalog each tick
+
 ## 1.1.0
 
 - Rename public field class to `XyloMultiselectTwo` (`MultiselectTwo` kept as deprecated alias)

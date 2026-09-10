@@ -46,7 +46,8 @@ it('normalizes rich options with descriptions barcodes and skus', function () {
 
     $normalized = $field->getNormalizedOptions();
 
-    expect($normalized['1']['label'])->toBe('Cheese Burger 6"')
+    expect($normalized)->toBe($field->getNormalizedOptions())
+        ->and($normalized['1']['label'])->toBe('Cheese Burger 6"')
         ->and($normalized['1']['description'])->toBe('$7.99')
         ->and($normalized['1']['barcode'])->toBe('100100')
         ->and($normalized['1']['sku'])->toBe('CH-06')

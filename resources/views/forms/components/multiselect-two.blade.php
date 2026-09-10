@@ -5,7 +5,8 @@
     $pageSize = $getPageSize();
     $accentData = $getAccentDataAttribute();
     $themeStyle = $getThemeStyle();
-    $optionKeys = implode(',', array_keys($getNormalizedOptions()));
+    $normalizedOptions = $getNormalizedOptions();
+    $optionKeys = implode(',', array_keys($normalizedOptions));
 @endphp
 
 <x-dynamic-component
@@ -19,7 +20,7 @@
         @if ($themeStyle) style="{{ $themeStyle }}" @endif
         x-data="{
             state: $wire.{{ $applyStateBindingModifiers("\$entangle('{$statePath}')") }},
-            options: @js($getNormalizedOptions()),
+            options: @js($normalizedOptions),
             optionList: [],
             availableSearch: '',
             selectedSearch: '',
@@ -28,6 +29,11 @@
             pageSize: @js($pageSize),
             visibleAvailableCount: @js($pageSize),
             visibleSelectedCount: @js($pageSize),
+            _listsKey: '',
+            _selectedSet: null,
+            _filteredAvailable: [],
+            _filteredSelected: [],
+            _availableCount: 0,
 
             init() {
                 if (! Array.isArray(this.state)) {
@@ -47,10 +53,6 @@
                 })
             },
 
-            selectedSet() {
-                return new Set((this.state || []).map((value) => String(value)))
-            },
-
             matchesSearch(option, query) {
                 if (! query) {
                     return true
@@ -59,18 +61,59 @@
                 return option.search.includes(query.trim().toLowerCase())
             },
 
-            filteredAvailable() {
-                const selected = this.selectedSet()
-                const query = this.availableSearch
+            ensureLists() {
+                const key = (this.state || []).join('\0') + '\n' + this.availableSearch + '\n' + this.selectedSearch
 
-                return this.optionList.filter((item) => ! selected.has(item.value) && this.matchesSearch(item, query))
+                if (this._listsKey === key) {
+                    return
+                }
+
+                this._listsKey = key
+                this._selectedSet = new Set((this.state || []).map((value) => String(value)))
+
+                const availableQuery = this.availableSearch
+                const selectedQuery = this.selectedSearch
+                const available = []
+                const selected = []
+                let availableCount = 0
+
+                for (const item of this.optionList) {
+                    if (this._selectedSet.has(item.value)) {
+                        if (this.matchesSearch(item, selectedQuery)) {
+                            selected.push(item)
+                        }
+
+                        continue
+                    }
+
+                    availableCount++
+
+                    if (this.matchesSearch(item, availableQuery)) {
+                        available.push(item)
+                    }
+                }
+
+                this._filteredAvailable = available
+                this._filteredSelected = selected
+                this._availableCount = availableCount
+            },
+
+            selectedSet() {
+                this.ensureLists()
+
+                return this._selectedSet
+            },
+
+            filteredAvailable() {
+                this.ensureLists()
+
+                return this._filteredAvailable
             },
 
             filteredSelected() {
-                const selected = this.selectedSet()
-                const query = this.selectedSearch
+                this.ensureLists()
 
-                return this.optionList.filter((item) => selected.has(item.value) && this.matchesSearch(item, query))
+                return this._filteredSelected
             },
 
             availableEntries() {
@@ -106,9 +149,9 @@
             },
 
             availableCount() {
-                const selected = this.selectedSet()
+                this.ensureLists()
 
-                return this.optionList.filter((item) => ! selected.has(item.value)).length
+                return this._availableCount
             },
 
             selectedCount() {
