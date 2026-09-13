@@ -10,11 +10,7 @@
     $limitToStatePath = $getLimitToStatePath();
 @endphp
 
-<x-dynamic-component
-    :component="$getFieldWrapperView()"
-    :field="$field"
->
-    <div
+<div
         wire:key="xms-{{ md5($statePath.'|'.$optionKeys) }}"
         class="xms-two"
         data-accent="{{ $accentData }}"
@@ -469,5 +465,4 @@
                 @endif
             </section>
         </div>
-    </div>
-</x-dynamic-component>
+</div>

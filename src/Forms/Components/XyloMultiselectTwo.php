@@ -123,6 +123,17 @@ class XyloMultiselectTwo extends Field
         $this->rule('array');
     }
 
+    /**
+     * Filament 5 wraps field chrome (label, helper, errors) in PHP.
+     * Do not use the old Filament 3 `$getFieldWrapperView()` Blade wrapper —
+     * that becomes `filament-forms::components.field-wrapper.index` and can
+     * print as raw text when the view is missing after a Filament upgrade.
+     */
+    public function toHtml(): string
+    {
+        return $this->wrapEmbeddedHtml($this->render()->render());
+    }
+
     public function selectableLabel(string | Closure | null $label): static
     {
         $this->selectableLabel = $label;

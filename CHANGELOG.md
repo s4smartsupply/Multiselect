@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.5
+
+- Fix Filament 5 field chrome: stop wrapping the Blade view with `$getFieldWrapperView()` / `field-wrapper.index` (that printed the view name as raw text on some deploys). Use `Field::wrapEmbeddedHtml()` instead.
+
 ## 1.1.4
 
 - Add all shown now adds every filtered available item, not only the first `pageSize` rendered rows
