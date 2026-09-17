@@ -32,6 +32,10 @@
             limitState: @js($limitToStatePath) ? $wire.$entangle(@js($limitToStatePath), true) : [],
             barcodeStrict: @js($isBarcodeStrict()),
             searchOnScanMiss: @js($shouldSearchOnScanMiss()),
+            instantScan: @js($hasBarcodeScanner && $hasInstantScan()),
+            instantScanDelay: @js($getInstantScanDelay()),
+            instantScanMinLength: @js($getInstantScanMinLength()),
+            _instantTimeout: null,
             scanFeedbackDuration: @js($showScanFeedback ? $getScanFeedbackDuration() : 0),
             scanMessages: @js($showScanFeedback ? $getScanMessages() : []),
             scanStatus: { type: '', message: '' },
@@ -58,6 +62,9 @@
                     ...option,
                 }))
                 this.buildScanIndex()
+                if (this.instantScan) {
+                    this.$watch('barcode', (value) => this.onBarcodeTyped(value))
+                }
                 this.$watch('availableSearch', () => {
                     this.visibleAvailableCount = this.pageSize
                 })
@@ -75,6 +82,8 @@
 
             destroy() {
                 this.clearScanTimeout()
+                clearTimeout(this._instantTimeout)
+                this._instantTimeout = null
             },
 
             /* Strip case and every separator a label or a keyboard-wedge scanner may add. */
@@ -426,6 +435,38 @@
             },
 
             /*
+             * Instant mode: resolve while typing, without Enter.
+             *
+             * Two rules keep this from adding the wrong row. The code must settle for
+             * instantScanDelay first, so a prefix of a long code can't match some other
+             * product's shorter barcode mid-burst. And only an unambiguous match is acted
+             * on — misses stay silent here, because a half-typed code is not a failed scan.
+             */
+            onBarcodeTyped(value) {
+                if (this.disabled) {
+                    return
+                }
+
+                clearTimeout(this._instantTimeout)
+
+                const code = String(value ?? '').trim()
+
+                if (code.length < this.instantScanMinLength) {
+                    return
+                }
+
+                this._instantTimeout = setTimeout(() => {
+                    if (this.barcode.trim() !== code) {
+                        return
+                    }
+
+                    if (this.findScanMatches(code).length === 1) {
+                        this.scanBarcode()
+                    }
+                }, this.instantScanDelay)
+            },
+
+            /*
              * Resolves a scanned code entirely in the browser — no request is made and the
              * code is never sent anywhere. Adds an option only when exactly one matches;
              * every other outcome reports back instead of guessing.
@@ -441,6 +482,7 @@
                     return
                 }
 
+                clearTimeout(this._instantTimeout)
                 this.barcode = ''
                 this.$refs.barcodeInput?.focus()
 

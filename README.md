@@ -128,9 +128,9 @@ scans into a product stored as EAN-13 `0012546011112`. Tiers 2 and 3 apply to `b
 and `skus()` only — an option value (usually a record id) is matched exactly or not at all,
 so an id can never shadow a real barcode.
 
-**A scan never guesses.** If a code matches more than one option, nothing is selected; the
-component reports the ambiguity and hands the code to the search box so a human decides.
-Every outcome is shown inline under the input:
+**A scan never guesses.** If a code matches more than one option, nothing is selected and
+the component reports the ambiguity so a human decides. Every outcome is shown inline
+under the input:
 
 | Outcome         | When                                                       |
 | --------------- | ---------------------------------------------------------- |
@@ -140,15 +140,43 @@ Every outcome is shown inline under the input:
 | `not_found`     | No option matches                                           |
 | `ambiguous`     | More than one option matches                                |
 
+### Instant or Enter-to-scan
+
+By default the code is resolved when the operator presses Enter, which is what a
+keyboard-wedge scanner sends after the digits. `instantScan()` resolves while typing
+instead:
+
+```php
+XyloMultiselectTwo::make('items')
+    ->barcodeScanner()
+    ->instantScan()                // no Enter needed
+    ->instantScanDelay(120)        // idle ms before the typed code is evaluated
+    ->instantScanMinLength(6)      // ignore anything shorter
+    ->options($items);
+```
+
+Instant mode is deliberately quiet: while typing, only an **unambiguous** match is added
+and misses report nothing, because a half-typed code is not a failed scan. Enter still
+works and still reports every outcome.
+
+The delay matters. Without it, a prefix of a long code could match some other product's
+shorter barcode mid-burst and add the wrong row — waiting for the input to settle is what
+prevents that. Lower it only if your scanner is slow; raise it if operators type by hand.
+
+### Other options
+
 ```php
 XyloMultiselectTwo::make('items')
     ->barcodeScanner()
     ->scanFeedbackDuration(0)      // keep the result visible until the next scan
-    ->searchOnScanMiss(false)      // don't touch the search box on a miss
+    ->searchOnScanMiss()           // put an unresolved code into the search box
     ->barcodeStrict()              // exact matches only (pre-1.2 behaviour)
     ->options($items)
     ->barcodes($barcodes);
 ```
+
+Opt into `searchOnScanMiss()` if you would rather have an unresolved code dropped into the
+available search box than left to the result line alone.
 
 Messages live under the `scan.*` translation keys:
 
@@ -196,8 +224,10 @@ stored as `012546011440`.
 | `enableSearch()` / `searchable()`                                                       | Toggle search inputs                                                          |
 | `enableBarcode()` / `barcodeScanner()`                                                  | Toggle barcode input                                                          |
 | `barcodeStrict()`                                                                       | Require byte-for-byte scan matches (disables the relaxed tiers)               |
+| `instantScan()`                                                                         | Add a match while typing instead of on Enter (default off)                    |
+| `instantScanDelay(120)` / `instantScanMinLength(6)`                                     | Idle time and shortest code an instant scan acts on                           |
 | `scanFeedback()` / `scanFeedbackDuration(4000)`                                         | Inline scan result line; `0` keeps it until the next scan                     |
-| `searchOnScanMiss()`                                                                    | Put an unresolved scan into the available search box (default on)             |
+| `searchOnScanMiss()`                                                                    | Put an unresolved scan into the available search box (default off)            |
 | `showCounts()`                                                                          | Toggle count badges                                                           |
 | `showBulkActions()`                                                                     | Toggle footer buttons                                                         |
 | `listHeight(320)`                                                                       | Scroll area height in px                                                      |

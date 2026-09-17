@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0
+
+- Add `instantScan()` — resolve the code while typing instead of waiting for Enter. Off by default. While typing, only an unambiguous match is added and misses stay silent, since a half-typed code is not a failed scan; Enter still resolves and reports every outcome. Tune with `instantScanDelay()` (default 120ms) and `instantScanMinLength()` (default 6). The delay is what stops a prefix of a long code from matching another product's shorter barcode mid-burst.
+- **`searchOnScanMiss()` now defaults to off.** The result line already says what happened, and overwriting the search box costs the operator the filter they were using. Call `searchOnScanMiss()` to restore the 1.2 behaviour.
+
 ## 1.2.0
 
 - **Barcode scanning now resolves real-world codes.** Matching runs in three tiers — exact, separator/case-insensitive, then GTIN-14 — so a 12-digit UPC-A scan finds a 13-digit stored barcode, and spaces or dashes in either value no longer break the lookup. Previously only a byte-for-byte match worked, which silently failed on the leading zeros most catalogs store.

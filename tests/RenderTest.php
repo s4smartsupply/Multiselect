@@ -46,6 +46,19 @@ it('renders the scan controls and keeps the code client side', function () {
         ->not->toContain('$wire.call');
 });
 
+it('only watches the barcode field when instant scanning is on', function () {
+    $options = ['1' => ['label' => 'Cheese Burger', 'barcode' => '0012546011112']];
+
+    $enterToScan = renderField(XyloMultiselectTwo::make('items')->options($options));
+    $instant = renderField(XyloMultiselectTwo::make('items')->options($options)->instantScan());
+
+    expect($enterToScan)
+        ->toContain('instantScan: false')
+        ->and($instant)
+        ->toContain('instantScan: true')
+        ->toContain('onBarcodeTyped');
+});
+
 it('omits scan feedback wiring when the scanner or feedback is off', function () {
     $noScanner = renderField(XyloMultiselectTwo::make('items')->options(['1' => 'A'])->barcodeScanner(false));
     $noFeedback = renderField(XyloMultiselectTwo::make('items')->options(['1' => 'A'])->scanFeedback(false));

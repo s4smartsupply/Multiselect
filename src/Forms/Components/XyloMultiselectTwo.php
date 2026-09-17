@@ -50,7 +50,13 @@ class XyloMultiselectTwo extends Field
 
     protected bool | Closure $showScanFeedback = true;
 
-    protected bool | Closure $searchOnScanMiss = true;
+    protected bool | Closure $searchOnScanMiss = false;
+
+    protected bool | Closure $hasInstantScan = false;
+
+    protected int | Closure $instantScanDelay = 120;
+
+    protected int | Closure $instantScanMinLength = 6;
 
     protected int | Closure $scanFeedbackDuration = 4000;
 
@@ -358,6 +364,57 @@ class XyloMultiselectTwo extends Field
     }
 
     /**
+     * Add the option as soon as the typed code resolves, without waiting for Enter.
+     *
+     * Off by default. While typing, only an unambiguous match is acted on and nothing
+     * is reported — pressing Enter still resolves and reports every outcome.
+     */
+    public function instantScan(bool | Closure $condition = true): static
+    {
+        $this->hasInstantScan = $condition;
+
+        return $this;
+    }
+
+    public function hasInstantScan(): bool
+    {
+        return (bool) $this->evaluate($this->hasInstantScan);
+    }
+
+    /**
+     * Idle time before an instant scan is evaluated, in milliseconds.
+     *
+     * A keyboard-wedge scanner emits a whole code in one burst, so this also keeps a
+     * prefix of a long code from matching some other product's shorter barcode.
+     */
+    public function instantScanDelay(int | Closure $milliseconds = 120): static
+    {
+        $this->instantScanDelay = $milliseconds;
+
+        return $this;
+    }
+
+    public function getInstantScanDelay(): int
+    {
+        return max(0, (int) $this->evaluate($this->instantScanDelay));
+    }
+
+    /**
+     * Shortest code an instant scan will act on.
+     */
+    public function instantScanMinLength(int | Closure $length = 6): static
+    {
+        $this->instantScanMinLength = $length;
+
+        return $this;
+    }
+
+    public function getInstantScanMinLength(): int
+    {
+        return max(1, (int) $this->evaluate($this->instantScanMinLength));
+    }
+
+    /**
      * Show the inline scan result line under the barcode input.
      */
     public function scanFeedback(bool | Closure $condition = true): static
@@ -390,7 +447,8 @@ class XyloMultiselectTwo extends Field
 
     /**
      * Copy an unresolved scan into the available search box so the operator can
-     * finish the lookup by eye instead of hitting a dead end.
+     * finish the lookup by eye. Off by default — the result line already says what
+     * happened, and overwriting the search costs the operator their current filter.
      */
     public function searchOnScanMiss(bool | Closure $condition = true): static
     {

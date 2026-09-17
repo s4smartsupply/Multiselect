@@ -94,14 +94,36 @@ it('can toggle scan feedback and its duration', function () {
         ->and(XyloMultiselectTwo::make('items')->scanFeedbackDuration(-50)->getScanFeedbackDuration())->toBe(0);
 });
 
-it('only hands a missed scan to the search box when search is enabled', function () {
+it('keeps a missed scan out of the search box unless asked, and never without search', function () {
     $default = XyloMultiselectTwo::make('items');
-    $optedOut = XyloMultiselectTwo::make('items')->searchOnScanMiss(false);
-    $withoutSearch = XyloMultiselectTwo::make('items')->searchable(false);
+    $optedIn = XyloMultiselectTwo::make('items')->searchOnScanMiss();
+    $withoutSearch = XyloMultiselectTwo::make('items')->searchOnScanMiss()->searchable(false);
 
-    expect($default->shouldSearchOnScanMiss())->toBeTrue()
-        ->and($optedOut->shouldSearchOnScanMiss())->toBeFalse()
+    expect($default->shouldSearchOnScanMiss())->toBeFalse()
+        ->and($optedIn->shouldSearchOnScanMiss())->toBeTrue()
         ->and($withoutSearch->shouldSearchOnScanMiss())->toBeFalse();
+});
+
+it('can switch the scanner between instant and enter-to-scan', function () {
+    $default = XyloMultiselectTwo::make('items');
+    $instant = XyloMultiselectTwo::make('items')->instantScan();
+
+    expect($default->hasInstantScan())->toBeFalse()
+        ->and($instant->hasInstantScan())->toBeTrue()
+        ->and($instant->instantScan(false)->hasInstantScan())->toBeFalse();
+});
+
+it('clamps the instant scan delay and minimum length', function () {
+    $default = XyloMultiselectTwo::make('items');
+    $tuned = XyloMultiselectTwo::make('items')->instantScanDelay(250)->instantScanMinLength(8);
+    $invalid = XyloMultiselectTwo::make('items')->instantScanDelay(-10)->instantScanMinLength(0);
+
+    expect($default->getInstantScanDelay())->toBe(120)
+        ->and($default->getInstantScanMinLength())->toBe(6)
+        ->and($tuned->getInstantScanDelay())->toBe(250)
+        ->and($tuned->getInstantScanMinLength())->toBe(8)
+        ->and($invalid->getInstantScanDelay())->toBe(0)
+        ->and($invalid->getInstantScanMinLength())->toBe(1);
 });
 
 it('exposes scan messages with label and code placeholders', function () {
