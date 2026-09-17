@@ -8,6 +8,8 @@
     $normalizedOptions = $getNormalizedOptions();
     $optionKeys = implode(',', array_keys($normalizedOptions));
     $limitToStatePath = $getLimitToStatePath();
+    $hasBarcodeScanner = $hasBarcodeScanner();
+    $showScanFeedback = $hasBarcodeScanner && $shouldShowScanFeedback();
 @endphp
 
 <div
@@ -28,6 +30,17 @@
             visibleSelectedCount: @js($pageSize),
             limitPath: @js($limitToStatePath),
             limitState: @js($limitToStatePath) ? $wire.$entangle(@js($limitToStatePath), true) : [],
+            barcodeStrict: @js($isBarcodeStrict()),
+            searchOnScanMiss: @js($shouldSearchOnScanMiss()),
+            scanFeedbackDuration: @js($showScanFeedback ? $getScanFeedbackDuration() : 0),
+            scanMessages: @js($showScanFeedback ? $getScanMessages() : []),
+            scanStatus: { type: '', message: '' },
+            _scanTimeout: null,
+            _searchCameFromScan: false,
+            _optionsByValue: null,
+            _scanExact: null,
+            _scanLoose: null,
+            _scanGtin: null,
             _listsKey: '',
             _selectedSet: null,
             _filteredAvailable: [],
@@ -44,6 +57,7 @@
                     value: String(value),
                     ...option,
                 }))
+                this.buildScanIndex()
                 this.$watch('availableSearch', () => {
                     this.visibleAvailableCount = this.pageSize
                 })
@@ -59,12 +73,139 @@
                 }
             },
 
-            matchesSearch(option, query) {
-                if (! query) {
+            destroy() {
+                this.clearScanTimeout()
+            },
+
+            /* Strip case and every separator a label or a keyboard-wedge scanner may add. */
+            normalizeCode(value) {
+                return String(value ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '')
+            },
+
+            /*
+             * GTIN-14 form of a numeric code. UPC-E/UPC-A/EAN-13/GTIN-14 all denote the
+             * same article once left-padded to 14 digits, so this is what makes a 12-digit
+             * scan match a 13-digit stored barcode. Non-numeric codes have no GTIN form.
+             */
+            gtinKey(code) {
+                return /^[0-9]{6,14}$/.test(code) ? code.padStart(14, '0') : ''
+            },
+
+            /*
+             * Three lookup tiers, each mapping a key to every option that claims it.
+             * Buckets (not single values) are what lets scanBarcode() refuse to guess
+             * when a code is ambiguous.
+             */
+            buildScanIndex() {
+                const exact = new Map()
+                const loose = new Map()
+                const gtin = new Map()
+                const byValue = new Map()
+
+                const add = (map, key, value) => {
+                    if (! key) {
+                        return
+                    }
+
+                    const bucket = map.get(key)
+
+                    if (! bucket) {
+                        map.set(key, [value])
+                    } else if (! bucket.includes(value)) {
+                        bucket.push(value)
+                    }
+                }
+
+                for (const item of this.optionList) {
+                    byValue.set(item.value, item)
+
+                    // An option value (record id) is only ever matched exactly, never through
+                    // a relaxed tier, so an id can never shadow a real barcode.
+                    add(exact, item.value.trim().toLowerCase(), item.value)
+
+                    const codes = []
+
+                    for (const candidate of [item.barcode, item.sku]) {
+                        if (candidate === null || candidate === undefined || candidate === '') {
+                            continue
+                        }
+
+                        add(exact, String(candidate).trim().toLowerCase(), item.value)
+
+                        const normal = this.normalizeCode(candidate)
+
+                        if (! normal) {
+                            continue
+                        }
+
+                        const padded = this.gtinKey(normal)
+                        codes.push(normal)
+
+                        if (padded) {
+                            codes.push(padded)
+                        }
+
+                        if (this.barcodeStrict) {
+                            continue
+                        }
+
+                        add(loose, normal, item.value)
+                        add(gtin, padded, item.value)
+                    }
+
+                    item.codeSearch = codes.join(' ')
+                }
+
+                this._optionsByValue = byValue
+                this._scanExact = exact
+                this._scanLoose = loose
+                this._scanGtin = gtin
+            },
+
+            findScanMatches(raw) {
+                const exact = this._scanExact.get(raw.trim().toLowerCase())
+
+                if (exact) {
+                    return exact
+                }
+
+                if (this.barcodeStrict) {
+                    return []
+                }
+
+                const normal = this.normalizeCode(raw)
+
+                if (! normal) {
+                    return []
+                }
+
+                return this._scanLoose.get(normal)
+                    ?? this._scanGtin.get(this.gtinKey(normal))
+                    ?? []
+            },
+
+            searchNeedle(query) {
+                const raw = (query || '').trim().toLowerCase()
+
+                if (! raw) {
+                    return null
+                }
+
+                const code = this.normalizeCode(raw)
+
+                return { raw: raw, code: code.length >= 3 ? code : '' }
+            },
+
+            matchesSearch(option, needle) {
+                if (! needle) {
                     return true
                 }
 
-                return option.search.includes(query.trim().toLowerCase())
+                if (option.search.includes(needle.raw)) {
+                    return true
+                }
+
+                return needle.code !== '' && option.codeSearch !== '' && option.codeSearch.includes(needle.code)
             },
 
             allowedSet() {
@@ -87,8 +228,8 @@
                 this._selectedSet = new Set((this.state || []).map((value) => String(value)))
 
                 const allowed = this.allowedSet()
-                const availableQuery = this.availableSearch
-                const selectedQuery = this.selectedSearch
+                const availableQuery = this.searchNeedle(this.availableSearch)
+                const selectedQuery = this.searchNeedle(this.selectedSearch)
                 const available = []
                 const selected = []
                 let availableCount = 0
@@ -231,33 +372,114 @@
                 this.state = []
             },
 
+            clearScanTimeout() {
+                if (this._scanTimeout) {
+                    clearTimeout(this._scanTimeout)
+                    this._scanTimeout = null
+                }
+            },
+
+            setScanStatus(type, replacements) {
+                this.clearScanTimeout()
+
+                const template = this.scanMessages[type]
+
+                if (! template) {
+                    this.scanStatus = { type: '', message: '' }
+
+                    return
+                }
+
+                this.scanStatus = {
+                    type: type,
+                    message: Object.entries(replacements).reduce(
+                        (carry, [token, replacement]) => carry.replaceAll(':' + token, replacement),
+                        template
+                    ),
+                }
+
+                if (this.scanFeedbackDuration > 0) {
+                    this._scanTimeout = setTimeout(() => {
+                        this.scanStatus = { type: '', message: '' }
+                        this._scanTimeout = null
+                    }, this.scanFeedbackDuration)
+                }
+            },
+
+            /* Hand an unresolved code over to the search box so the operator can finish by eye. */
+            handOverToSearch(code) {
+                if (! this.searchOnScanMiss) {
+                    return
+                }
+
+                this.availableSearch = code
+                this._searchCameFromScan = true
+            },
+
+            clearHandedOverSearch() {
+                if (! this._searchCameFromScan) {
+                    return
+                }
+
+                this.availableSearch = ''
+                this._searchCameFromScan = false
+            },
+
+            /*
+             * Resolves a scanned code entirely in the browser — no request is made and the
+             * code is never sent anywhere. Adds an option only when exactly one matches;
+             * every other outcome reports back instead of guessing.
+             */
             scanBarcode() {
                 if (this.disabled) {
                     return
                 }
 
-                const code = this.barcode.trim().toLowerCase()
+                const code = this.barcode.trim()
 
                 if (! code) {
                     return
                 }
 
-                const match = this.optionList.find((option) => {
-                    const barcode = (option.barcode || '').toLowerCase()
-                    const sku = (option.sku || '').toLowerCase()
-                    const key = String(option.value).toLowerCase()
+                this.barcode = ''
+                this.$refs.barcodeInput?.focus()
 
-                    return barcode === code || sku === code || key === code
-                })
+                const matches = this.findScanMatches(code)
 
-                if (! match) {
-                    this.barcode = ''
+                if (matches.length === 0) {
+                    this.setScanStatus('not_found', { code: code })
+                    this.handOverToSearch(code)
 
                     return
                 }
 
-                this.select(match.value)
-                this.barcode = ''
+                if (matches.length > 1) {
+                    this.setScanStatus('ambiguous', { code: code })
+                    this.handOverToSearch(code)
+
+                    return
+                }
+
+                const value = matches[0]
+                const label = this._optionsByValue.get(value)?.label ?? value
+                const allowed = this.allowedSet()
+
+                if (allowed && ! allowed.has(value)) {
+                    this.setScanStatus('not_allowed', { label: label, code: code })
+
+                    return
+                }
+
+                if (this.selectedSet().has(value)) {
+                    this.setScanStatus('already_added', { label: label, code: code })
+                    this.clearHandedOverSearch()
+
+                    return
+                }
+
+                this.select(value)
+                this.setScanStatus('added', { label: label, code: code })
+                this.clearHandedOverSearch()
             },
         }"
     >
@@ -272,7 +494,7 @@
                 </header>
 
                 <div class="xms-two__controls">
-                    @if ($hasBarcodeScanner())
+                    @if ($hasBarcodeScanner)
                         <label class="xms-two__input-wrap xms-two__input-wrap--barcode">
                             <span class="xms-two__icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -283,11 +505,16 @@
                             <input
                                 type="text"
                                 class="xms-two__input"
+                                x-ref="barcodeInput"
                                 x-model="barcode"
-                                @keydown.enter.prevent="scanBarcode()"
+                                @keydown.enter.prevent.stop="scanBarcode()"
                                 placeholder="{{ $getBarcodePlaceholder() }}"
                                 @disabled($isDisabled)
                                 autocomplete="off"
+                                autocorrect="off"
+                                autocapitalize="off"
+                                spellcheck="false"
+                                inputmode="text"
                             />
                         </label>
                     @endif
@@ -309,6 +536,18 @@
                                 autocomplete="off"
                             />
                         </label>
+                    @endif
+
+                    @if ($showScanFeedback)
+                        <p
+                            class="xms-two__scan-status"
+                            :class="scanStatus.type ? 'xms-two__scan-status--' + scanStatus.type : null"
+                            x-show="scanStatus.message"
+                            x-cloak
+                            x-text="scanStatus.message"
+                            role="status"
+                            aria-live="polite"
+                        ></p>
                     @endif
                 </div>
 

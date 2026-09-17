@@ -23,4 +23,12 @@ return [
         'available' => 'No available items',
         'selected' => 'No items selected',
     ],
+
+    'scan' => [
+        'added' => 'Added :label',
+        'already_added' => ':label is already selected',
+        'not_allowed' => ':label is not available in this list',
+        'not_found' => 'No item matches :code',
+        'ambiguous' => 'Several items match :code — pick the right one from the list',
+    ],
 ];

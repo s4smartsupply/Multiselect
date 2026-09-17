@@ -111,12 +111,65 @@ XyloMultiselectTwo::make('items')
     ]);
 ```
 
+## Barcode scanning
+
+The barcode input takes whatever a keyboard-wedge scanner types, then Enter. Matching
+happens entirely in the browser against the options already on the page — **a scanned
+code is never sent to the server**.
+
+A scan is resolved in three tiers, stopping at the first one that hits:
+
+1. **Exact** — the code as typed, against `barcodes()`, `skus()` and option values.
+2. **Normalized** — case and every separator (spaces, dashes, dots) removed from both sides.
+3. **GTIN-14** — numeric codes left-padded to 14 digits.
+
+Tier 3 is what makes catalogs work in practice: a label printed as UPC-A `012546011112`
+scans into a product stored as EAN-13 `0012546011112`. Tiers 2 and 3 apply to `barcodes()`
+and `skus()` only — an option value (usually a record id) is matched exactly or not at all,
+so an id can never shadow a real barcode.
+
+**A scan never guesses.** If a code matches more than one option, nothing is selected; the
+component reports the ambiguity and hands the code to the search box so a human decides.
+Every outcome is shown inline under the input:
+
+| Outcome         | When                                                       |
+| --------------- | ---------------------------------------------------------- |
+| `added`         | Exactly one match, allowed, not selected yet                |
+| `already_added` | The matched option is already in the selected panel         |
+| `not_allowed`   | The matched option is excluded by `limitTo()`               |
+| `not_found`     | No option matches                                           |
+| `ambiguous`     | More than one option matches                                |
+
+```php
+XyloMultiselectTwo::make('items')
+    ->barcodeScanner()
+    ->scanFeedbackDuration(0)      // keep the result visible until the next scan
+    ->searchOnScanMiss(false)      // don't touch the search box on a miss
+    ->barcodeStrict()              // exact matches only (pre-1.2 behaviour)
+    ->options($items)
+    ->barcodes($barcodes);
+```
+
+Messages live under the `scan.*` translation keys:
+
+```php
+// lang/vendor/xylo-multiselect-two/en/xylo-multiselect-two.php
+'scan' => [
+    'added' => 'Added :label',
+    'not_found' => 'No item matches :code',
+    // ...
+],
+```
+
+Search benefits from the same normalization: typing `0125-4601 1440` finds a product
+stored as `012546011440`.
+
 ## Features
 
 - Two-sided transfer UI (available ↔ selected)
 - Count badges on both panels
-- Barcode scan input (Enter to add)
-- Search / filter on both sides (name, SKU, barcode) with **200ms debounce**
+- **Barcode scan input** (Enter to add) with GTIN-aware matching and an inline result line — see [Barcode scanning](#barcode-scanning)
+- Search / filter on both sides (name, SKU, barcode, formatted codes) with **200ms debounce**
 - **Scroll windowing** — renders `pageSize` rows at a time (default 80), loads more on scroll
 - Prebuilt option list + `Set` membership for fast filtering on large catalogs
 - **Dynamic options remount** via `wire:key` (safe for dependent fields like Free Reward ⊆ Products to Buy)
@@ -142,6 +195,9 @@ XyloMultiselectTwo::make('items')
 | `selectableLabel()` / `selectedLabel()`                                                 | Panel titles                                                                  |
 | `enableSearch()` / `searchable()`                                                       | Toggle search inputs                                                          |
 | `enableBarcode()` / `barcodeScanner()`                                                  | Toggle barcode input                                                          |
+| `barcodeStrict()`                                                                       | Require byte-for-byte scan matches (disables the relaxed tiers)               |
+| `scanFeedback()` / `scanFeedbackDuration(4000)`                                         | Inline scan result line; `0` keeps it until the next scan                     |
+| `searchOnScanMiss()`                                                                    | Put an unresolved scan into the available search box (default on)             |
 | `showCounts()`                                                                          | Toggle count badges                                                           |
 | `showBulkActions()`                                                                     | Toggle footer buttons                                                         |
 | `listHeight(320)`                                                                       | Scroll area height in px                                                      |

@@ -56,6 +56,63 @@ it('normalizes rich options with descriptions barcodes and skus', function () {
         ->and($normalized['2']['barcode'])->toBe('100200');
 });
 
+it('trims stored codes so padded values still match a scan', function () {
+    $normalized = XyloMultiselectTwo::make('items')
+        ->options([
+            '1' => [
+                'label' => 'Cheese Burger 6"',
+                'barcode' => "  0012546011112\t",
+                'sku' => ' CH-06 ',
+            ],
+            '2' => ['label' => 'Beef Burger', 'barcode' => '   '],
+        ])
+        ->getNormalizedOptions();
+
+    expect($normalized['1']['barcode'])->toBe('0012546011112')
+        ->and($normalized['1']['sku'])->toBe('CH-06')
+        ->and($normalized['1']['search'])->toContain('0012546011112')
+        ->and($normalized['2']['barcode'])->toBeNull();
+});
+
+it('matches scans loosely by default and strictly on request', function () {
+    $default = XyloMultiselectTwo::make('items');
+    $strict = XyloMultiselectTwo::make('items')->barcodeStrict();
+
+    expect($default->isBarcodeStrict())->toBeFalse()
+        ->and($strict->isBarcodeStrict())->toBeTrue()
+        ->and($strict->barcodeStrict(false)->isBarcodeStrict())->toBeFalse();
+});
+
+it('can toggle scan feedback and its duration', function () {
+    $default = XyloMultiselectTwo::make('items');
+    $custom = XyloMultiselectTwo::make('items')->scanFeedback(false)->scanFeedbackDuration(0);
+
+    expect($default->shouldShowScanFeedback())->toBeTrue()
+        ->and($default->getScanFeedbackDuration())->toBe(4000)
+        ->and($custom->shouldShowScanFeedback())->toBeFalse()
+        ->and($custom->getScanFeedbackDuration())->toBe(0)
+        ->and(XyloMultiselectTwo::make('items')->scanFeedbackDuration(-50)->getScanFeedbackDuration())->toBe(0);
+});
+
+it('only hands a missed scan to the search box when search is enabled', function () {
+    $default = XyloMultiselectTwo::make('items');
+    $optedOut = XyloMultiselectTwo::make('items')->searchOnScanMiss(false);
+    $withoutSearch = XyloMultiselectTwo::make('items')->searchable(false);
+
+    expect($default->shouldSearchOnScanMiss())->toBeTrue()
+        ->and($optedOut->shouldSearchOnScanMiss())->toBeFalse()
+        ->and($withoutSearch->shouldSearchOnScanMiss())->toBeFalse();
+});
+
+it('exposes scan messages with label and code placeholders', function () {
+    $messages = XyloMultiselectTwo::make('items')->getScanMessages();
+
+    expect($messages)->toHaveKeys(['added', 'already_added', 'not_allowed', 'not_found', 'ambiguous'])
+        ->and($messages['added'])->toContain(':label')
+        ->and($messages['not_found'])->toContain(':code')
+        ->and($messages['ambiguous'])->toContain(':code');
+});
+
 it('uses natural accent by default', function () {
     $field = XyloMultiselectTwo::make('items');
 

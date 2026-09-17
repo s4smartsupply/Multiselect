@@ -46,6 +46,14 @@ class XyloMultiselectTwo extends Field
 
     protected bool | Closure $hasBarcodeScanner = true;
 
+    protected bool | Closure $isBarcodeStrict = false;
+
+    protected bool | Closure $showScanFeedback = true;
+
+    protected bool | Closure $searchOnScanMiss = true;
+
+    protected int | Closure $scanFeedbackDuration = 4000;
+
     protected bool | Closure $showCounts = true;
 
     protected bool | Closure $showBulkActions = true;
@@ -328,6 +336,88 @@ class XyloMultiselectTwo extends Field
     public function hasBarcodeScanner(): bool
     {
         return (bool) $this->evaluate($this->hasBarcodeScanner);
+    }
+
+    /**
+     * Match scans byte-for-byte against `barcodes()`, `skus()` and option values.
+     *
+     * Off by default: a keyboard-wedge scanner emits what is printed on the label,
+     * which routinely differs from the stored value by leading zeros, spaces or
+     * dashes. The relaxed tiers absorb that; strict restores pre-1.2 behaviour.
+     */
+    public function barcodeStrict(bool | Closure $condition = true): static
+    {
+        $this->isBarcodeStrict = $condition;
+
+        return $this;
+    }
+
+    public function isBarcodeStrict(): bool
+    {
+        return (bool) $this->evaluate($this->isBarcodeStrict);
+    }
+
+    /**
+     * Show the inline scan result line under the barcode input.
+     */
+    public function scanFeedback(bool | Closure $condition = true): static
+    {
+        $this->showScanFeedback = $condition;
+
+        return $this;
+    }
+
+    public function shouldShowScanFeedback(): bool
+    {
+        return (bool) $this->evaluate($this->showScanFeedback);
+    }
+
+    /**
+     * How long the scan result line stays visible, in milliseconds. `0` keeps it
+     * until the next scan.
+     */
+    public function scanFeedbackDuration(int | Closure $milliseconds = 4000): static
+    {
+        $this->scanFeedbackDuration = $milliseconds;
+
+        return $this;
+    }
+
+    public function getScanFeedbackDuration(): int
+    {
+        return max(0, (int) $this->evaluate($this->scanFeedbackDuration));
+    }
+
+    /**
+     * Copy an unresolved scan into the available search box so the operator can
+     * finish the lookup by eye instead of hitting a dead end.
+     */
+    public function searchOnScanMiss(bool | Closure $condition = true): static
+    {
+        $this->searchOnScanMiss = $condition;
+
+        return $this;
+    }
+
+    public function shouldSearchOnScanMiss(): bool
+    {
+        return $this->isSearchable() && (bool) $this->evaluate($this->searchOnScanMiss);
+    }
+
+    /**
+     * Scan result templates. `:label` and `:code` are replaced in the browser.
+     *
+     * @return array<string, string>
+     */
+    public function getScanMessages(): array
+    {
+        return [
+            'added' => __('xylo-multiselect-two::xylo-multiselect-two.scan.added'),
+            'already_added' => __('xylo-multiselect-two::xylo-multiselect-two.scan.already_added'),
+            'not_allowed' => __('xylo-multiselect-two::xylo-multiselect-two.scan.not_allowed'),
+            'not_found' => __('xylo-multiselect-two::xylo-multiselect-two.scan.not_found'),
+            'ambiguous' => __('xylo-multiselect-two::xylo-multiselect-two.scan.ambiguous'),
+        ];
     }
 
     public function showCounts(bool | Closure $condition = true): static
@@ -680,6 +770,10 @@ class XyloMultiselectTwo extends Field
                 $sku = $skus[$key] ?? null;
             }
 
+            // Stored codes often carry padding whitespace; a scanner never sends it.
+            $barcode = $this->trimCode($barcode);
+            $sku = $this->trimCode($sku);
+
             $searchParts = array_filter([
                 $label,
                 $description,
@@ -698,5 +792,16 @@ class XyloMultiselectTwo extends Field
         }
 
         return $normalized;
+    }
+
+    protected function trimCode(?string $code): ?string
+    {
+        if ($code === null) {
+            return null;
+        }
+
+        $code = trim($code);
+
+        return $code === '' ? null : $code;
     }
 }

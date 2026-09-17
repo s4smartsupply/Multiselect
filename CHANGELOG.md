@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.2.0
+
+- **Barcode scanning now resolves real-world codes.** Matching runs in three tiers — exact, separator/case-insensitive, then GTIN-14 — so a 12-digit UPC-A scan finds a 13-digit stored barcode, and spaces or dashes in either value no longer break the lookup. Previously only a byte-for-byte match worked, which silently failed on the leading zeros most catalogs store.
+- **A scan never guesses.** When a code matches more than one option nothing is selected; the code is reported and handed to the search box instead. Option values (record ids) are still matched exactly only, so an id can't shadow a barcode.
+- **Scans report their outcome** inline under the input (added / already selected / not available / not found / ambiguous), replacing the previous silent failure. Configure with `scanFeedback()` and `scanFeedbackDuration()`, translate via the new `scan.*` keys.
+- Unresolved scans populate the available search box so the operator can finish by eye — opt out with `searchOnScanMiss(false)`.
+- Search also accepts formatted codes: `0125-4601 1440` now finds a product stored as `012546011440`.
+- `barcodeStrict()` restores the pre-1.2 exact-only matching.
+- Barcode input keeps focus after a scan and no longer autocorrects or autocapitalises.
+- `barcodes()` / `skus()` values are trimmed when normalized; whitespace-only codes become `null`.
+
+All matching happens in the browser against options already on the page — a scanned code is never sent anywhere.
+
 ## 1.1.5
 
 - Fix Filament 5 field chrome: stop wrapping the Blade view with `$getFieldWrapperView()` / `field-wrapper.index` (that printed the view name as raw text on some deploys). Use `Field::wrapEmbeddedHtml()` instead.
